@@ -19,6 +19,13 @@ var Main = function () {
     //set the preferences to use PIXELS so the image is sized in pixels
     app.preferences.rulerUnits = Units.PIXELS;
     app.preferences.typeUnits = TypeUnits.PIXELS;
+
+    var fol = Folder(outputFolder + "/" + docRef.name + "/");
+    if (!fol.exists) {
+        fol.create();
+    }
+    outputFolder = fol;
+
     if (documents.length == 0) {
         alert("No Open Document");
     } else {
@@ -52,11 +59,12 @@ var IterateThroughLayers = function (lsets, folderName) {
         ExportLayer(lsets.artLayers[i], folderName);
     }
     for (var j = 0; j < lsets.layerSets.length; j++) {
-        IterateThroughLayers(lsets.layerSets[j], folderName + "_" + lsets.layerSets[j].name);
+        IterateThroughLayers(lsets.layerSets[j], folderName + "/" + lsets.layerSets[j].name);
     }
 };
 
 var ExportLayer = function (l, foldername) {
+    l.visible = true;
     //need to copy the layer before switching to a different document
     l.copy();
     var imageSize = BestSize(l);
@@ -64,11 +72,17 @@ var ExportLayer = function (l, foldername) {
     var pngSaveOpt = new PNGSaveOptions();
 
     //creat the file to save into. used the folder names, the layer name and then added a currentImageNumber to make sure that duplicate names don't save over each other
-    var fileName = new File(outputFolder + "/" + foldername + "_" + l.name + "_" + currentImageNumber + ".png");
+    var fold = Folder(outputFolder + "/" + foldername + "/");
+    if (!fold.exists) {
+        fold.create();
+    }
+    //switched to using tempDoc.name so the file name is always valid
+    var fileName = new File(outputFolder + "/" + foldername + "/" + tempDoc.name + "_" + currentImageNumber + ".png");
     tempDoc.paste();
     tempDoc.saveAs(fileName, pngSaveOpt, true, Extension.LOWERCASE);
     tempDoc.close(SaveOptions.DONOTSAVECHANGES);
     currentImageNumber++;
+    app.activeDocument = docRef;
 };
 
 //find out which of the Squares our layer will fit in
